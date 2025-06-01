@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String     @id @unique
+  name     String
+  email    String     @unique
+  role     Role       @default(USER)
+  reaction Reaction[]
+  Post     Post[]
+}
+
+model Comment {
+  id            Int      @default(autoincrement())
+  content       String
+  authorId      String
+  likes         Int      @default(0)
+  dislikes      Int      @default(0)
+  createdAt     DateTime
+  corelation_id String   @id @unique
+  post          Post     @relation(fields: [corelation_id], references: [corelation_id])
+}
+
+model Post {
+  id            Int        @default(autoincrement())
+  title         String
+  content       String
+  authorId      String
+  createdAt     DateTime
+  likes         Int        @default(0)
+  dislikes      Int        @default(0)
+  media         String
+  corelation_id String     @id @unique
+  comments      Comment[]
+  author        User       @relation(fields: [authorId], references: [id])
+  reaction      Reaction[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Reaction {
+  id     Int    @id @default(autoincrement())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  postId String
+  post   Post   @relation(fields: [postId], references: [corelation_id])
+
+  reaction REACTION?
+
+  @@unique([postId, userId])
+}
+
+enum REACTION {
+  LIKE
+  DISLIKE
+}
